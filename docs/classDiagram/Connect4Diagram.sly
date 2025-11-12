@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="iso-8859-15" standalone="no"?>
+<classDiagram>
+  <diagramElements defaultViewEntities="ALL" defaultViewEnum="true" defaultViewMethods="TYPE_AND_NAME" defaultVisibleTypes="true" informations="" name="Connect4">
+    <association aggregation="NONE" direction="SECOND_TO_FIRST" id="8218" name="&lt; use">
+      <role componentId="7939" name="" visibility="PRIVATE">
+        <multiplicity>
+          <min>1</min>
+          <max>1</max>
+        </multiplicity>
+      </role>
+      <role componentId="8209" name="" visibility="PRIVATE">
+        <multiplicity>
+          <min>1</min>
+          <max>1</max>
+        </multiplicity>
+      </role>
+    </association>
+    <entity entityType="CLASS" id="8209" isAbstract="false" name="Connect4Server" visibility="PUBLIC">
+      <method isAbstract="false" isStatic="true" name="main" returnType="void" view="DEFAULT" visibility="PUBLIC">
+        <variable const="false" name="args" type="String[]"/>
+      </method>
+    </entity>
+    <association aggregation="NONE" direction="FIRST_TO_SECOND" id="8200" name="use &gt;">
+      <role componentId="8160" name="" visibility="PRIVATE">
+        <multiplicity>
+          <min>0</min>
+          <max>2</max>
+        </multiplicity>
+      </role>
+      <role componentId="7939" name="" visibility="PRIVATE">
+        <multiplicity>
+          <min>1</min>
+          <max>1</max>
+        </multiplicity>
+      </role>
+    </association>
+    <entity entityType="CLASS" id="8160" isAbstract="false" name="Connect4Client" visibility="PUBLIC">
+      <method isAbstract="false" isStatic="true" name="main" returnType="void" view="DEFAULT" visibility="PUBLIC">
+        <variable const="false" name="args" type="String[]"/>
+      </method>
+    </entity>
+    <entity entityType="CLASS" id="7939" isAbstract="false" name="Connect4" visibility="PUBLIC">
+      <attribute const="false" defaultValue="" isStatic="false" name="player1" type="String" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="false" name="player2" type="String" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="false" name="grid" type="short[][]" visibility="PRIVATE"/>
+      <method is-constructor="true" isAbstract="false" isStatic="false" name="Connect4" returnType="" view="DEFAULT" visibility="PUBLIC">
+        <variable const="false" name="player1" type="String"/>
+      </method>
+      <method isAbstract="false" isStatic="false" name="checkInput" returnType="boolean" view="DEFAULT" visibility="PUBLIC">
+        <variable const="false" name="column" type="short"/>
+      </method>
+      <method isAbstract="false" isStatic="false" name="play" returnType="void" view="DEFAULT" visibility="PUBLIC">
+        <variable const="false" name="column" type="short"/>
+      </method>
+      <method isAbstract="false" isStatic="false" name="checkWin" returnType="short" view="DEFAULT" visibility="PUBLIC"/>
+    </entity>
+  </diagramElements>
+  <umlView grid="10" name="Main view" open="true">
+    <relationView color="-12566464" relationId="8200">
+      <line>
+        <point>
+          <x>331</x>
+          <y>261</y>
+        </point>
+        <point>
+          <x>501</x>
+          <y>261</y>
+        </point>
+      </line>
+      <labelAssociation>
+        <x>420</x>
+        <y>265</y>
+        <w>33</w>
+        <h>16</h>
+      </labelAssociation>
+      <roleAssociation>
+        <x>335</x>
+        <y>265</y>
+        <w>0</w>
+        <h>16</h>
+      </roleAssociation>
+      <roleAssociation>
+        <x>495</x>
+        <y>265</y>
+        <w>0</w>
+        <h>16</h>
+      </roleAssociation>
+      <multipliciteAssociation>
+        <x>335</x>
+        <y>239</y>
+        <w>23</w>
+        <h>16</h>
+      </multipliciteAssociation>
+      <multipliciteAssociation>
+        <x>487</x>
+        <y>239</y>
+        <w>8</w>
+        <h>16</h>
+      </multipliciteAssociation>
+    </relationView>
+    <relationView color="-12566464" relationId="8218">
+      <line>
+        <point>
+          <x>731</x>
+          <y>261</y>
+        </point>
+        <point>
+          <x>951</x>
+          <y>261</y>
+        </point>
+      </line>
+      <labelAssociation>
+        <x>845</x>
+        <y>265</y>
+        <w>33</w>
+        <h>16</h>
+      </labelAssociation>
+      <roleAssociation>
+        <x>735</x>
+        <y>265</y>
+        <w>0</w>
+        <h>16</h>
+      </roleAssociation>
+      <roleAssociation>
+        <x>945</x>
+        <y>265</y>
+        <w>0</w>
+        <h>16</h>
+      </roleAssociation>
+      <multipliciteAssociation>
+        <x>735</x>
+        <y>239</y>
+        <w>8</w>
+        <h>16</h>
+      </multipliciteAssociation>
+      <multipliciteAssociation>
+        <x>937</x>
+        <y>239</y>
+        <w>8</w>
+        <h>16</h>
+      </multipliciteAssociation>
+    </relationView>
+    <componentView color="-2079" componentID="7939" displayAttributes="true" displayDefault="true" displayMethods="true">
+      <geometry>
+        <x>500</x>
+        <y>150</y>
+        <w>230</w>
+        <h>160</h>
+      </geometry>
+    </componentView>
+    <componentView color="-2079" componentID="8160" displayAttributes="true" displayDefault="true" displayMethods="true">
+      <geometry>
+        <x>160</x>
+        <y>230</y>
+        <w>170</w>
+        <h>70</h>
+      </geometry>
+    </componentView>
+    <componentView color="-2079" componentID="8209" displayAttributes="true" displayDefault="true" displayMethods="true">
+      <geometry>
+        <x>950</x>
+        <y>230</y>
+        <w>150</w>
+        <h>70</h>
+      </geometry>
+    </componentView>
+  </umlView>
+</classDiagram>
