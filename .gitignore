@@ -1,21 +1,14 @@
 ## IntelliJ IDEA
 # General
-.idea/libraries/
-.idea/shelf/
-.idea/compiler.xml
-.idea/jarRepositories.xml
-.idea/modules.xml
-.idea/workspace.xml
+.idea/
 *.iws
 *.iml
 *.ipr
 
-# Editor-based HTTP Client requests
-.idea/httpRequests/
-
-# Datasource local storage ignored files
-.idea/dataSources/
-.idea/dataSources.local.xml
+## NeoVIM
+.classpath
+.project
+.settings/
 
 ## Linux
 # Temporary files
