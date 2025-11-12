@@ -1,0 +1,121 @@
+@startuml
+
+participant Client1
+participant Server
+participant Client2
+
+autonumber 1
+
+== Join server ==
+
+Client1 -> Server: JOIN Alice
+
+alt successful join
+
+    Server -> Client1: OK
+
+else username already used
+
+    Server -> Client1: ERROR 1
+
+else server is full
+
+    Server -> Client1: ERROR 2
+
+end
+
+|||
+
+== New opponent joins and readies themselves ==
+
+Client2 -> Server: JOIN Bob
+Server -> Client2: OK
+
+Client1 -> Server: READY
+Client2 -> Server: READY
+
+|||
+
+== Game starts if all players are ready ==
+
+Server -> Client1: GAME_STARTS Bob 1
+Server -> Client2: GAME_STARTS Alice 0
+
+|||
+
+loop until one of the players win or a draw occurs
+    == Play a turn ==
+
+    Client1 -> Server: PLAY 3
+
+    alt successfully placed your piece
+
+        Server -> Client1: OK
+
+    else not your turn
+
+        Server -> Client1: ERROR 1
+
+    else column index out of range
+
+        Server -> Client1: ERROR 2
+
+    else column already full
+
+        Server -> Client1: ERROR 3
+
+    else wrong format
+
+        Server -> Client1: ERROR 4
+
+    end
+
+    == Update grid and tells the other player that he can play ==
+
+    Server -> Client2: YOUR_TURN 3
+
+end
+
+|||
+
+== Result of the game ==
+
+alt a draw occured
+
+    Server -> Client1: END_OF_GAME DRAW
+    Server -> Client2: END_OF_GAME DRAW
+
+else Alice wins
+
+    Server -> Client1: END_OF_GAME WIN
+    Server -> Client2: END_OF_GAME LOOSE
+
+else Bob wins
+
+    Server -> Client1: END_OF_GAME LOOSE
+    Server -> Client2: END_OF_GAME WIN
+
+end
+
+|||
+
+== Quit ==
+
+alt Alice closes connection after the end of the game
+
+    Client1 -> Client1: Close the connection
+    Client1 <--> Server: Connection is closed
+    Server -> Server: Remove Alice from users
+
+else Alice leaves during the game
+
+    Client1 -> Client1: Close the connection
+    Client1 <--> Server: Connection is closed
+    Server -> Server: Remove Alice from users
+    Server -> Client2: END_OF_GAME WIN
+
+end
+
+== End of sequence ==
+
+@enduml
