@@ -1,4 +1,4 @@
-package connect4;
+package connect4.utils;
 
 /**
  * Defines the commands the server can send
