@@ -85,7 +85,7 @@ PLAY <column>
 
 **Response**
 
-- `ERROR <code>`
+- `ERROR <type>`
     - `not_your_turn`: This is not your turn
     - `index_out_of_range`: Index out of range
     - `column_full`: Column full
