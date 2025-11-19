@@ -16,11 +16,11 @@ alt successful join
 
 else username already used
 
-    Server -> Client1: ERROR 1
+    Server -> Client1: ERROR username_used
 
 else server is full
 
-    Server -> Client1: ERROR 2
+    Server -> Client1: ERROR server_full
 
 end
 
@@ -54,19 +54,19 @@ loop until one of the players win or a draw occurs
 
     else not your turn
 
-        Server -> Client1: ERROR 1
+        Server -> Client1: ERROR not_your_turn
 
     else column index out of range
 
-        Server -> Client1: ERROR 2
+        Server -> Client1: ERROR index_out_of_range
 
     else column already full
 
-        Server -> Client1: ERROR 3
+        Server -> Client1: ERROR column_full
 
     else wrong format
 
-        Server -> Client1: ERROR 4
+        Server -> Client1: ERROR invalid_format
 
     end
 
@@ -80,7 +80,7 @@ end
 
 == Result of the game ==
 
-alt a draw occured
+alt a draw occurred
 
     Server -> Client1: END_OF_GAME DRAW
     Server -> Client2: END_OF_GAME DRAW

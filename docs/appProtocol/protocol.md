@@ -36,9 +36,9 @@ JOIN <username>
 **Response:**
 
 - `OK`: The client has joined the server
-- `ERROR <code>`: an error during the joining process
-    - `1` : The username is already in use
-    - `2` : The server is already full (2 players have already joined the server)
+- `ERROR <type>`: an error during the joining process
+    - `username_used` : The username is already in use
+    - `server_full` : The server is already full (2 players have already joined the server)
 
 ### Tell the server the client is ready to play
 
@@ -85,11 +85,11 @@ PLAY <column>
 
 **Response**
 
-- `ERROR <code>`
-    - `1`: This is not your turn
-    - `2`: Index out of range
-    - `3`: Column full
-    - `4`: Too few / too much argument or invalid format.
+- `ERROR <type>`
+    - `not_your_turn`: This is not your turn
+    - `index_out_of_range`: Index out of range
+    - `column_full`: Column full
+    - `invalid_format`: Too few / too much argument or invalid format.
 - `OK` : the play was registered successfully
 
 ### It's your turn
