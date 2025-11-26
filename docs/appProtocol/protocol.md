@@ -131,6 +131,14 @@ None
 
 To quit the server, the client can simply closes the connections. As the protocol is TCP based, the server will notice the connection has been closed, remove the client from the list of connected clients and close the connection on its side too. The server should never close the connection by itself, the client is responsible for closing the connection.
 
+### Unknown message
+
+If the client sends an unknown message, the server will answer with a generic response.
+
+**Response**
+
+- `ERROR unknown_message`: tells the client that the request he made is unknown to him
+
 ## Example
 
 ![](diag_protocol.svg)
