@@ -40,7 +40,6 @@ JOIN <username>
 - `OK`: The client has joined the server
 - `ERROR <type>`: an error during the joining process
     - `username_used` : The username is already in use
-    - `server_full` : The server is already full (2 players have already joined the server)
 
 ### Tell the server the client is ready to play
 

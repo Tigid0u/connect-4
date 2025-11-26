@@ -60,6 +60,8 @@ public class Connect4Server {
 
                 // Run REPL until client disconnects
                 while (!socket.isClosed()) {
+                    /*-- Server receives a request --*/
+
                     String request = br.readLine();
 
                     // Client disconnected
@@ -88,7 +90,6 @@ public class Connect4Server {
                             String[] arguments = requestParsed[1].split(" ", 2);
                             String userName = arguments[0];
 
-
                         }
                         case READY -> {
 
@@ -104,6 +105,8 @@ public class Connect4Server {
                     // Send the result of the request
                     bw.write(response + END_OF_LINE);
                     bw.flush();
+
+                    /*-- Server makes a request --*/
                 }
             } catch (IOException e) {
                 System.err.println("[ERROR] exception: " + e);
