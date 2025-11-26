@@ -142,3 +142,7 @@ If the client sends an unknown message, the server will answer with a generic re
 ## Example
 
 ![](diag_protocol.svg)
+
+## Example - unknown message
+
+![](diag_protocol_unkownMSG.svg)

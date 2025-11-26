@@ -1,0 +1,14 @@
+@startuml
+participant Client1
+participant Server
+
+autonumber 1
+
+Client1 --> Server : HELLO
+Server --> Client1 : ERROR unknown_message
+
+note over Client1, Server
+The client and server can continue to communicate
+like nothing happened
+end note
+@enduml
