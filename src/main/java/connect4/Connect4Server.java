@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -13,11 +14,23 @@ import connect4.utils.*;
 public class Connect4Server {
     private static final int PORT = 4444;
     private static final int NB_THREADS = 2;
+    private static final int ROWS = 6;
+    private static final int COLUMNS = 7;
     private static final String END_OF_LINE = "\n";
+
+    private static final Connect4 game = new Connect4(COLUMNS, ROWS);
 
     // Atomic attributes
     private static final AtomicInteger nbClient = new AtomicInteger(0);
-    private static final Map<String, Integer> clientReady = new ConcurrentHashMap<>();
+    private static final AtomicInteger nbOfReady = new AtomicInteger(0);
+    // ChatGPT gave me the equivalent of a Set but for concurrency
+    private static final Set<String> userNames = ConcurrentHashMap.newKeySet();
+
+    private enum ClientState {
+        JOIN,
+        READY,
+        IN_GAME
+    }
 
     public static void main(String[] args) {
         try(ServerSocket serverSocket = new ServerSocket(PORT);
@@ -36,9 +49,13 @@ public class Connect4Server {
 
     static class ClientHandler implements Runnable {
         private final Socket socket;
+        private String clientUserName;
+        private boolean ready;
+        private ClientState state = ClientState.JOIN;
 
         public ClientHandler(Socket socket) {
             this.socket = socket;
+            ready = false;
         }
 
         @Override
@@ -76,6 +93,7 @@ public class Connect4Server {
                     // Parse the request for the first command
                     String[] requestParsed = request.split(" ", 2);
 
+                    // Convert String to ClientCommands
                     ClientCommands command = null;
                     try {
                         command = ClientCommands.valueOf(requestParsed[0]);
@@ -83,31 +101,65 @@ public class Connect4Server {
                         // Do nothing
                     }
 
-                    // Prepare response
+                    // Handle command
                     String response = null;
-                    switch (command) {
+                    response = switch (command) {
                         case JOIN -> {
-                            String[] arguments = requestParsed[1].split(" ", 2);
-                            String userName = arguments[0];
+                            //
 
+                            // Check if there is a userName
+                            if (requestParsed.length < 2 || requestParsed[1].trim().isEmpty()) {
+                                yield ServerCommands.ERROR + " missing_username";
+                            }
+
+                            // Taking the username from the request
+                            String[] arguments = requestParsed[1].split(" ", 2);
+                            clientUserName = arguments[0];
+
+                            // Check if the username is already being used
+                            if (!userNames.add(clientUserName)) {
+                                yield ServerCommands.ERROR + " username_used";
+                            }
+
+                            // The client was registered to play connect 4
+                            yield ServerCommands.OK + "";
                         }
                         case READY -> {
-
+                            nbOfReady.incrementAndGet();
+                            ready = true;
+                            yield "";
                         }
                         case PLAY -> {
 
                         }
                         case null, default -> {
-
+                            yield ServerCommands.ERROR + " unknown_message";
                         }
-                    }
+                    };
 
                     // Send the result of the request
                     bw.write(response + END_OF_LINE);
                     bw.flush();
 
+                    // Ready to play
+                    if (ready) {
+
+                        while (!socket.isClosed() || ) {
+
+                        }
+                    }
+
                     /*-- Server makes a request --*/
                 }
+                // Removes client
+                nbClient.decrementAndGet();
+                // Removes the client username from the server's data
+                if (clientUserName != null) {
+                    userNames.remove(clientUserName);
+                }
+
+                System.out.println("[SERVER] client " + clientUserName + " disconnected\n" +
+                        "[SERVER] closing connection");
             } catch (IOException e) {
                 System.err.println("[ERROR] exception: " + e);
             }

@@ -22,6 +22,19 @@ On an unknown command or mis-formated command, the server sends an error message
 
 The server can hold up to `2 clients` at the same time. Other connections will be put on hold.
 
+An order must be followed for the commands the client uses:
+
+1. JOIN
+2. READY
+3. PLAY
+
+The server also has an order to follow when sending data to the client:
+
+1. GAME_STARTS (once the client is READY)
+2. YOUR_TURN (after a client played)
+
+If the order is not followed, the server will send an error.
+
 ## Commands
 
 ### Join the server
@@ -39,7 +52,8 @@ JOIN <username>
 
 - `OK`: The client has joined the server
 - `ERROR <type>`: an error during the joining process
-    - `username_used` : The username is already in use
+    - `username_used` : the username is already used
+    - `missing_username`: the username is missing
 
 ### Tell the server the client is ready to play
 
@@ -53,7 +67,8 @@ READY
 
 **Response**
 
-None
+- `ERROR <type>`
+  - `invalid_order`: the order of command was broken
 
 ### The game starts
 
@@ -91,6 +106,7 @@ PLAY <column>
     - `index_out_of_range`: Index out of range
     - `column_full`: Column full
     - `invalid_format`: Too few / too much argument or invalid format.
+    - `invalid_order`: the order of command was broken
 - `OK` : the play was registered successfully
 
 ### It's your turn
@@ -144,10 +160,14 @@ If the client sends an unknown message, the server will answer with a generic re
 
 ![](diag_protocol.svg)
 
-## Example - unknown message
+### Example - unknown message
 
 ![](diag_protocol_unkownMSG.svg)
 
-## Example - third client tries to connect to the server
+### Example - third client tries to connect to the server
 
 ![](diag_protocol_third_client.svg)
+
+### Example - client sends a command he's not supposed to
+
+![](diag_protocol_order_error.svg)

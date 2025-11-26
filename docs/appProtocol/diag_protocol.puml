@@ -18,9 +18,9 @@ else username already used
 
     Server -> Client1: ERROR username_used
 
-else server is full
+else username is missing
 
-    Server -> Client1: ERROR server_full
+    Server -> Client1: ERROR missing_username
 
 end
 
@@ -32,6 +32,10 @@ Client2 -> Server: JOIN Bob
 Server -> Client2: OK
 
 Client1 -> Server: READY
+alt invalid order
+Server -> Client1: ERROR invalid_order
+end
+
 Client2 -> Server: READY
 
 |||
