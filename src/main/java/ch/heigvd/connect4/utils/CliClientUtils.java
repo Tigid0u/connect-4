@@ -54,11 +54,4 @@ public class CliClientUtils {
     System.out.print("\033[H\033[2J");
     System.out.flush();
   }
-
-  public static void main(String[] args) {
-    displayBanner();
-    String res = getUserInput("Please type in your username");
-    clearScreen();
-    getUserInput("");
-  }
 }
