@@ -1,6 +1,6 @@
-package connect4;
+package ch.heigvd.connect4;
 
-import connect4.utils.*;
+import ch.heigvd.connect4.utils.*;
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -8,7 +8,7 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine;
 
-@Command(version = "Connect4Client v1.0", mixinStandardHelpOptions = true)
+@Command(name = "client", version = "Connect4Client v1.0", mixinStandardHelpOptions = true)
 
 public class Connect4Client implements Runnable {
   public static String END_OF_LINE = "\n";
