@@ -22,7 +22,7 @@ public class Connect4Client implements Runnable {
     SERVER_FULL
   }
 
-  @Option(names = { "-h",
+  @Option(names = { "-o",
       "--hostname" }, description = "Hostname of the server. Default is ${DEFAULT-VALUE}", defaultValue = "localhost")
   private String hostname;
 
