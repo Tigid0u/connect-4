@@ -32,7 +32,9 @@ Client2 -> Server: JOIN Bob
 Server -> Client2: OK
 
 Client1 -> Server: READY
-alt invalid order
+alt successful
+Server -> Client1: OK
+else invalid order if there wasn't a JOIN before
 Server -> Client1: ERROR invalid_order
 end
 
