@@ -68,6 +68,9 @@ public class Connect4Server {
                         continue;
                     }
 
+                    // Increment number of clients on the server
+                    nbClient.incrementAndGet();
+
                     // Parse the request for the first command
                     String[] requestParsed = request.split(" ", 2);
 
@@ -82,6 +85,9 @@ public class Connect4Server {
                     String response = null;
                     switch (command) {
                         case JOIN -> {
+                            String[] arguments = requestParsed[1].split(" ", 2);
+                            String userName = arguments[0];
+
 
                         }
                         case READY -> {

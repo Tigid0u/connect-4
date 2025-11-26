@@ -18,7 +18,9 @@ The initial connection must be established by the client. Once established, the 
 
 A finished game doesn't disconnect the client. It offers to start a new game but once finished playing, the client is responsible for closing the connection with the server.
 
-On an unknown command or mis-formated command, the server sends an error message to the client with a code indicating the error type.
+On an unknown command or mis-formated command, the server sends an error message to the client indicating the error type.
+
+The server can hold up to `2 clients` at the same time. Other connections will be put on hold.
 
 ## Commands
 
@@ -146,3 +148,7 @@ If the client sends an unknown message, the server will answer with a generic re
 ## Example - unknown message
 
 ![](diag_protocol_unkownMSG.svg)
+
+## Example - third client tries to connect to the server
+
+![](diag_protocol_third_client.svg)
