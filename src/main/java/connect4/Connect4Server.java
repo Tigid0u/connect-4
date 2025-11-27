@@ -3,20 +3,24 @@ package connect4;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ConcurrentHashMap;
 import connect4.utils.*;
+import java.util.Random;
 
 public class Connect4Server {
     private static final int PORT = 4444;
     private static final int NB_THREADS = 2;
     private static final int ROWS = 6;
     private static final int COLUMNS = 7;
+    private static int opponentAction;
+
     private static final String END_OF_LINE = "\n";
+    private static String userTurn;
 
     private static final Connect4 game = new Connect4(COLUMNS, ROWS);
 
@@ -25,6 +29,8 @@ public class Connect4Server {
     private static final AtomicInteger nbOfReady = new AtomicInteger(0);
     // ChatGPT gave me the equivalent of a Set but for concurrency
     private static final Set<String> userNames = ConcurrentHashMap.newKeySet();
+
+    private static final Object mutex = new Object();
 
     private enum ClientState {
         JOIN,
@@ -50,12 +56,11 @@ public class Connect4Server {
     static class ClientHandler implements Runnable {
         private final Socket socket;
         private String clientUserName;
-        private boolean ready;
+        private String opponentUserName;
         private ClientState state = ClientState.JOIN;
 
         public ClientHandler(Socket socket) {
             this.socket = socket;
-            ready = false;
         }
 
         @Override
@@ -77,7 +82,7 @@ public class Connect4Server {
 
                 // Run REPL until client disconnects
                 while (!socket.isClosed()) {
-                    /*-- Server receives a request --*/
+                    // Server receives a request
 
                     String request = br.readLine();
 
@@ -105,7 +110,10 @@ public class Connect4Server {
                     String response = null;
                     response = switch (command) {
                         case JOIN -> {
-                            //
+                            // Check order condition
+                            if (state != ClientState.JOIN) {
+                                yield ServerCommands.ERROR + " invalid_order";
+                            }
 
                             // Check if there is a userName
                             if (requestParsed.length < 2 || requestParsed[1].trim().isEmpty()) {
@@ -121,35 +129,78 @@ public class Connect4Server {
                                 yield ServerCommands.ERROR + " username_used";
                             }
 
+                            // Update the state the client has to be for the next iteration
+                            state = ClientState.READY;
+
                             // The client was registered to play connect 4
                             yield ServerCommands.OK + "";
                         }
                         case READY -> {
+                            // Check order condition
+                            if (state != ClientState.READY) {
+                                yield ServerCommands.ERROR + " invalid_order";
+                            }
+
                             nbOfReady.incrementAndGet();
-                            ready = true;
-                            yield "";
+                            mutex.notifyAll();
+
+                            // Wait for all the players to be ready
+                            synchronized (mutex) {
+                                while (nbOfReady.get() != NB_THREADS) {
+                                    try {
+                                        mutex.wait();
+                                    } catch (InterruptedException e) {
+                                        System.err.println("Exception: " + e);
+                                        Thread.currentThread().interrupt();
+                                    }
+                                }
+                                // Decides who starts
+                                Random rand = new Random();
+                                Iterator<String> it = userNames.iterator();
+                                int userIndex = rand.nextInt(NB_THREADS);
+
+                                // This'll give us the opponent's name and who starts randomly
+                                int i = 0;
+                                while (it.hasNext()) {
+                                    if (i <= userIndex) {
+                                        userTurn = it.next();
+                                    }
+                                    if (!clientUserName.equals(it.toString())) {
+                                        opponentUserName = it.toString();
+                                    }
+                                    ++i;
+                                }
+                            }
+                            // Update the state the client has to be for the next iteration of the while() loop
+                            state = ClientState.IN_GAME;
+
+                            yield ServerCommands.GAME_STARTS + " " + opponentUserName +
+                                    (userTurn.equals(clientUserName) ? " 1" : " 0");
                         }
                         case PLAY -> {
+                            // Check order condition
+                            if (state != ClientState.IN_GAME) {
+                                yield ServerCommands.ERROR + " invalid_order";
+                            }
 
+                            // Check if it's the client's turn to play
+                            if (!userTurn.equals(clientUserName)) {
+                                yield ServerCommands.ERROR + " not_your_turn";
+                            }
+
+                            yield "";
                         }
                         case null, default -> {
                             yield ServerCommands.ERROR + " unknown_message";
                         }
                     };
 
-                    // Send the result of the request
-                    bw.write(response + END_OF_LINE);
-                    bw.flush();
-
-                    // Ready to play
-                    if (ready) {
-
-                        while (!socket.isClosed() || ) {
-
-                        }
+                    // Making this verification in case we don't need to send anything to the client
+                    if (!response.isEmpty()) {
+                        // Send the result of the request
+                        bw.write(response + END_OF_LINE);
+                        bw.flush();
                     }
-
-                    /*-- Server makes a request --*/
                 }
                 // Removes client
                 nbClient.decrementAndGet();
