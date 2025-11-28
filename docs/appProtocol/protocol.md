@@ -103,9 +103,8 @@ PLAY <column>
 
 - `ERROR <type>`
     - `not_your_turn`: This is not your turn
-    - `index_out_of_range`: Index out of range
-    - `column_full`: Column full
-    - `invalid_format`: Too few / too much argument or invalid format.
+    - `invalid_input`: The input from the client is invalid (either column full or out of range)
+    - `invalid_format`: Too few / too much argument or invalid format
     - `invalid_order`: the order of command was broken
 - `OK` : the play was registered successfully
 

@@ -62,13 +62,9 @@ loop until one of the players win or a draw occurs
 
         Server -> Client1: ERROR not_your_turn
 
-    else column index out of range
+    else column index out of range or column full
 
-        Server -> Client1: ERROR index_out_of_range
-
-    else column already full
-
-        Server -> Client1: ERROR column_full
+        Server -> Client1: ERROR invalid_input
 
     else wrong format
 

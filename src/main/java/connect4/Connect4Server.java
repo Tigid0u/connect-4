@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ConcurrentHashMap;
 import connect4.utils.*;
+import connect4.utils.Connect4.TurnResult;
 import java.util.Random;
 
 public class Connect4Server {
@@ -17,12 +18,16 @@ public class Connect4Server {
     private static final int NB_THREADS = 2;
     private static final int ROWS = 6;
     private static final int COLUMNS = 7;
-    private static int opponentAction;
+
+    private static boolean randomAlreadyDone = false;
+    private static boolean gameCreated = false;
+    private static boolean endOfGame = false;
 
     private static final String END_OF_LINE = "\n";
     private static String userTurn;
+    private static String opponentAction;
 
-    private static final Connect4 game = new Connect4(COLUMNS, ROWS);
+    private static Connect4 game = new Connect4(COLUMNS, ROWS);
 
     // Atomic attributes
     private static final AtomicInteger nbClient = new AtomicInteger(0);
@@ -31,6 +36,8 @@ public class Connect4Server {
     private static final Set<String> userNames = ConcurrentHashMap.newKeySet();
 
     private static final Object mutex = new Object();
+
+    private static TurnResult turnResult;
 
     private enum ClientState {
         JOIN,
@@ -58,6 +65,7 @@ public class Connect4Server {
         private String clientUserName;
         private String opponentUserName;
         private ClientState state = ClientState.JOIN;
+        private final int id = nbClient.incrementAndGet();
 
         public ClientHandler(Socket socket) {
             this.socket = socket;
@@ -83,7 +91,6 @@ public class Connect4Server {
                 // Run REPL until client disconnects
                 while (!socket.isClosed()) {
                     // Server receives a request
-
                     String request = br.readLine();
 
                     // Client disconnected
@@ -91,9 +98,6 @@ public class Connect4Server {
                         socket.close();
                         continue;
                     }
-
-                    // Increment number of clients on the server
-                    nbClient.incrementAndGet();
 
                     // Parse the request for the first command
                     String[] requestParsed = request.split(" ", 2);
@@ -133,7 +137,7 @@ public class Connect4Server {
                             state = ClientState.READY;
 
                             // The client was registered to play connect 4
-                            yield ServerCommands.OK + "";
+                            yield String.valueOf(ServerCommands.OK);
                         }
                         case READY -> {
                             // Check order condition
@@ -154,21 +158,30 @@ public class Connect4Server {
                                         Thread.currentThread().interrupt();
                                     }
                                 }
-                                // Decides who starts
+
+                                // Decides who starts. Index of the starter is somewhere in {0, ... , NB_THREADS - 1}
                                 Random rand = new Random();
-                                Iterator<String> it = userNames.iterator();
                                 int userIndex = rand.nextInt(NB_THREADS);
 
-                                // This'll give us the opponent's name and who starts randomly
+                                // This'll give us the opponent's name and who starts randomly if it was not done
+                                // already by the other client
                                 int i = 0;
-                                while (it.hasNext()) {
-                                    if (i <= userIndex) {
-                                        userTurn = it.next();
+                                for (String name : userNames) {
+                                    // Get the name of the starting player
+                                    if ((!randomAlreadyDone) && (i == userIndex)) {
+                                        userTurn = name;
+                                        randomAlreadyDone = true;
                                     }
-                                    if (!clientUserName.equals(it.toString())) {
-                                        opponentUserName = it.toString();
+                                    // Get the name of the opponent
+                                    if (!clientUserName.equals(name)) {
+                                        opponentUserName = name;
                                     }
                                     ++i;
+                                }
+
+                                if (!gameCreated) {
+                                    gameCreated = true;
+                                    game = new Connect4(COLUMNS, ROWS);
                                 }
                             }
                             // Update the state the client has to be for the next iteration of the while() loop
@@ -183,17 +196,48 @@ public class Connect4Server {
                                 yield ServerCommands.ERROR + " invalid_order";
                             }
 
+
                             // Check if it's the client's turn to play
                             if (!userTurn.equals(clientUserName)) {
                                 yield ServerCommands.ERROR + " not_your_turn";
                             }
 
-                            yield "";
+                            String[] arguments = requestParsed[1].split(" ", 2);
+                            // Check if there is another arguments apart from the column the player wants to play
+                            // If there is a second argument, but it's a " " then it's not a problem
+                            if ((arguments.length > 1) && !(arguments[1].trim().isEmpty())) {
+                                yield ServerCommands.ERROR + " invalid_format";
+                            }
+                            String columnPlayed = arguments[0];
+
+                            // Playing the game
+                            try {
+                                turnResult = game.play(Integer.parseInt(columnPlayed), id);
+                            } catch (IllegalArgumentException e) {
+                                yield ServerCommands.ERROR + " invalid_input";
+                            }
+                            opponentAction = columnPlayed;
+
+                            // Result of the turn
+                            if (turnResult == TurnResult.WIN) {
+                                endOfGame = true;
+                                yield ServerCommands.END_OF_GAME + " WIN";
+                            } else if (turnResult == TurnResult.DRAW) {
+                                endOfGame = true;
+                                yield ServerCommands.END_OF_GAME + " DRAW";
+                            } else {
+                                userTurn = opponentUserName;
+                                yield String.valueOf(ServerCommands.OK);
+                            }
                         }
                         case null, default -> {
                             yield ServerCommands.ERROR + " unknown_message";
                         }
                     };
+
+                    if (endOfGame) {
+                        randomAlreadyDone = false;
+                    }
 
                     // Making this verification in case we don't need to send anything to the client
                     if (!response.isEmpty()) {
