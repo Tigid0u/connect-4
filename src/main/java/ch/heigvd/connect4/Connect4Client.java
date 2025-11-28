@@ -45,7 +45,6 @@ public class Connect4Client implements Runnable {
 
       CliClientUtils.clearScreen();
       CliClientUtils.displayBanner();
-      username = CliClientUtils.getUserInput("Please type in your username");
 
       while (!socket.isClosed()) {
         // Join the server
@@ -58,7 +57,6 @@ public class Connect4Client implements Runnable {
 
         // If join request is denied, we start over (ask username and join the server)
         if (retval != ReturnValue.OK) {
-            username = CliClientUtils.getUserInput("Please type in your username");
           continue;
         }
 
@@ -160,6 +158,7 @@ public class Connect4Client implements Runnable {
   private ReturnValue joinRequest(BufferedReader in, BufferedWriter out) throws IOException, IllegalArgumentException {
     String request = null, response = null;
     String[] responseParts = null;
+      username = CliClientUtils.getUserInput("Please type in your username");
 
     // Request to join server using JOIN command.
     request = ClientCommands.JOIN + " " + username + END_OF_LINE;
