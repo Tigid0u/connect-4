@@ -1,15 +1,36 @@
 <?xml version="1.0" encoding="iso-8859-15" standalone="no"?>
 <classDiagram>
   <diagramElements defaultViewEntities="ALL" defaultViewEnum="true" defaultViewMethods="TYPE_AND_NAME" defaultVisibleTypes="true" informations="" name="Connect4">
+    <inheritance id="18186" innerClass="true">
+      <child>18176</child>
+      <parent>8209</parent>
+    </inheritance>
+    <entity entityType="ENUM" id="18176" name="ClientState">
+      <EnumValue>JOIN</EnumValue>
+      <EnumValue>READY</EnumValue>
+      <EnumValue>IN_GAME</EnumValue>
+    </entity>
+    <inheritance id="16013">
+      <child>8209</child>
+      <parent>16011</parent>
+    </inheritance>
+    <inheritance id="16012">
+      <child>8160</child>
+      <parent>16011</parent>
+    </inheritance>
+    <entity entityType="INTERFACE" id="16011" isAbstract="true" name="Runnable" visibility="PUBLIC"/>
+    <inheritance id="10373" innerClass="true">
+      <child>10302</child>
+      <parent>8209</parent>
+    </inheritance>
     <inheritance id="10023" innerClass="true">
       <child>10021</child>
       <parent>7939</parent>
     </inheritance>
-    <entity entityType="ENUM" id="10021" name="TurnResult">
-      <EnumValue>WIN</EnumValue>
-      <EnumValue>NOTHING</EnumValue>
-      <EnumValue>DRAW</EnumValue>
-    </entity>
+    <inheritance id="13533" innerClass="true">
+      <child>13520</child>
+      <parent>8160</parent>
+    </inheritance>
     <association aggregation="NONE" direction="FIRST_TO_SECOND" id="8200" name="use &gt;">
       <role componentId="8160" name="" visibility="PRIVATE">
         <multiplicity>
@@ -38,6 +59,19 @@
         </multiplicity>
       </role>
     </association>
+    <entity entityType="CLASS" id="10302" isAbstract="false" name="ClientHandler" visibility="PUBLIC">
+      <attribute const="false" defaultValue="" isStatic="false" name="socket" type="Socket" visibility="PRIVATE"/>
+      <method is-constructor="true" isAbstract="false" isStatic="false" name="ClientHandler" returnType="" view="DEFAULT" visibility="PUBLIC">
+        <variable const="false" name="socket" type="Socket"/>
+      </method>
+      <method isAbstract="false" isStatic="false" name="run" returnType="void" view="DEFAULT" visibility="PUBLIC"/>
+      <method isAbstract="false" isStatic="false" name="resetServerAttributes" returnType="void" view="DEFAULT" visibility="PACKAGE"/>
+    </entity>
+    <entity entityType="ENUM" id="10021" name="TurnResult">
+      <EnumValue>WIN</EnumValue>
+      <EnumValue>NOTHING</EnumValue>
+      <EnumValue>DRAW</EnumValue>
+    </entity>
     <entity entityType="CLASS" id="7939" isAbstract="false" name="Connect4" visibility="PUBLIC">
       <attribute const="false" defaultValue="" isStatic="false" name="maxColumns" type="int" visibility="PRIVATE"/>
       <attribute const="false" defaultValue="" isStatic="false" name="maxRows" type="int" visibility="PRIVATE"/>
@@ -69,55 +103,137 @@
       <method isAbstract="false" isStatic="false" name="getGrid" returnType="int[][]" view="DEFAULT" visibility="PUBLIC"/>
     </entity>
     <entity entityType="CLASS" id="8160" isAbstract="false" name="Connect4Client" visibility="PUBLIC">
-      <method isAbstract="false" isStatic="true" name="main" returnType="void" view="DEFAULT" visibility="PUBLIC">
-        <variable const="false" name="args" type="String[]"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="END_OF_LINE" type="String" visibility="PUBLIC"/>
+      <attribute const="false" defaultValue="" isStatic="false" name="username" type="String" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="false" name="opponentUsername" type="String" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="false" name="isMyTurn" type="boolean" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="WIDTH" type="int" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="HEIGHT" type="int" visibility="PRIVATE"/>
+      <method isAbstract="false" isStatic="false" name="run" returnType="void" view="DEFAULT" visibility="PUBLIC"/>
+      <method isAbstract="false" isStatic="false" name="joinRequest" returnType="ReturnValue" view="DEFAULT" visibility="PRIVATE">
+        <variable const="false" name="in" type="BufferedReader"/>
+        <variable const="false" name="out" type="BufferedWriter"/>
+      </method>
+      <method isAbstract="false" isStatic="false" name="sendReadyRequest" returnType="void" view="DEFAULT" visibility="PRIVATE">
+        <variable const="false" name="out" type="BufferedWriter"/>
+      </method>
+      <method isAbstract="false" isStatic="false" name="waitForGameStartNotification" returnType="void" view="DEFAULT" visibility="PRIVATE">
+        <variable const="false" name="in" type="BufferedReader"/>
+      </method>
+      <method isAbstract="false" isStatic="false" name="sendPlayRequest" returnType="void" view="DEFAULT" visibility="PRIVATE">
+        <variable const="false" name="out" type="BufferedWriter"/>
+        <variable const="false" name="in" type="BufferedReader"/>
+        <variable const="false" name="column" type="int"/>
+      </method>
+      <method isAbstract="false" isStatic="false" name="receiveOpponentPlay" returnType="int" view="DEFAULT" visibility="PRIVATE">
+        <variable const="false" name="in" type="BufferedReader"/>
+      </method>
+      <method isAbstract="false" isStatic="false" name="receiveGameResult" returnType="void" view="DEFAULT" visibility="PRIVATE">
+        <variable const="false" name="in" type="BufferedReader"/>
       </method>
     </entity>
     <entity entityType="CLASS" id="8209" isAbstract="false" name="Connect4Server" visibility="PUBLIC">
-      <method isAbstract="false" isStatic="true" name="main" returnType="void" view="DEFAULT" visibility="PUBLIC">
-        <variable const="false" name="args" type="String[]"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="PORT" type="int" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="NB_THREADS" type="int" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="ROWS" type="int" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="COLUMNS" type="int" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="randomAlreadyDone" type="boolean" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="gameCreated" type="boolean" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="endOfGame" type="boolean" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="opponentLeft" type="boolean" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="END_OF_LINE" type="String" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="userTurn" type="String" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="opponentAction" type="String" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="nbClient" type="AtomicInteger" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="nbOfReady" type="AtomicInteger" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="userNames" type="Set&lt;String&gt;" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="true" name="mutex" type="Object" visibility="PRIVATE"/>
+      <attribute const="false" defaultValue="" isStatic="false" name="turnResult" type="TurnResult" visibility="PRIVATE"/>
+      <method isAbstract="false" isStatic="false" name="run" returnType="void" view="DEFAULT" visibility="PUBLIC"/>
+    </entity>
+    <entity entityType="ENUM" id="13520" name="ReturnValue">
+      <EnumValue>OK</EnumValue>
+      <EnumValue>UNKNOWN_RESPONSE</EnumValue>
+      <EnumValue>USERNAME_USED</EnumValue>
+      <EnumValue>SERVER_FULL</EnumValue>
+    </entity>
+    <entity entityType="CLASS" id="13534" isAbstract="false" name="CliClientUtils" visibility="PUBLIC">
+      <attribute const="false" defaultValue="" isStatic="true" name="sin" type="Scanner" visibility="PRIVATE"/>
+      <method isAbstract="false" isStatic="true" name="displayBanner" returnType="void" view="DEFAULT" visibility="PUBLIC"/>
+      <method isAbstract="false" isStatic="true" name="getUserInput" returnType="String" view="DEFAULT" visibility="PUBLIC">
+        <variable const="false" name="message" type="String"/>
       </method>
+      <method isAbstract="false" isStatic="true" name="getUserInputInt" returnType="int" view="DEFAULT" visibility="PUBLIC">
+        <variable const="false" name="message" type="String"/>
+        <variable const="false" name="min" type="int"/>
+        <variable const="false" name="max" type="int"/>
+      </method>
+      <method isAbstract="false" isStatic="true" name="clearScreen" returnType="void" view="DEFAULT" visibility="PUBLIC"/>
+      <method isAbstract="false" isStatic="true" name="printBoard" returnType="void" view="DEFAULT" visibility="PUBLIC">
+        <variable const="false" name="grid" type="int[][]"/>
+      </method>
+      <method isAbstract="false" isStatic="true" name="printHorizontalBorder" returnType="void" view="DEFAULT" visibility="PRIVATE">
+        <variable const="false" name="cols" type="int"/>
+        <variable const="false" name="left" type="char"/>
+        <variable const="false" name="mid" type="char"/>
+        <variable const="false" name="right" type="char"/>
+      </method>
+      <method isAbstract="false" isStatic="true" name="cellSymbol" returnType="char" view="DEFAULT" visibility="PRIVATE">
+        <variable const="false" name="value" type="int"/>
+      </method>
+    </entity>
+    <entity entityType="ENUM" id="13995" name="ClientCommands">
+      <EnumValue>JOIN</EnumValue>
+      <EnumValue>READY</EnumValue>
+      <EnumValue>PLAY</EnumValue>
+    </entity>
+    <entity entityType="ENUM" id="14005" name="ServerCommands">
+      <EnumValue>OK</EnumValue>
+      <EnumValue>ERROR</EnumValue>
+      <EnumValue>GAME_STARTS</EnumValue>
+      <EnumValue>YOUR_TURN</EnumValue>
+      <EnumValue>END_OF_GAME</EnumValue>
     </entity>
   </diagramElements>
   <umlView grid="10" name="Main view" open="true">
     <relationView color="-12566464" relationId="8218">
       <line>
         <point>
-          <x>831</x>
-          <y>261</y>
+          <x>1331</x>
+          <y>431</y>
         </point>
         <point>
-          <x>991</x>
-          <y>261</y>
+          <x>1491</x>
+          <y>431</y>
         </point>
       </line>
       <labelAssociation>
-        <x>898</x>
-        <y>270</y>
+        <x>1398</x>
+        <y>440</y>
         <w>33</w>
         <h>16</h>
       </labelAssociation>
       <roleAssociation>
-        <x>835</x>
-        <y>265</y>
+        <x>1335</x>
+        <y>435</y>
         <w>0</w>
         <h>16</h>
       </roleAssociation>
       <roleAssociation>
-        <x>985</x>
-        <y>265</y>
+        <x>1485</x>
+        <y>435</y>
         <w>0</w>
         <h>16</h>
       </roleAssociation>
       <multipliciteAssociation>
-        <x>835</x>
-        <y>239</y>
+        <x>1335</x>
+        <y>409</y>
         <w>8</w>
         <h>16</h>
       </multipliciteAssociation>
       <multipliciteAssociation>
-        <x>977</x>
-        <y>239</y>
+        <x>1477</x>
+        <y>409</y>
         <w>8</w>
         <h>16</h>
       </multipliciteAssociation>
@@ -125,85 +241,217 @@
     <relationView color="-12566464" relationId="8200">
       <line>
         <point>
-          <x>241</x>
-          <y>261</y>
+          <x>751</x>
+          <y>431</y>
         </point>
         <point>
-          <x>421</x>
-          <y>261</y>
+          <x>921</x>
+          <y>431</y>
         </point>
       </line>
       <labelAssociation>
-        <x>311</x>
-        <y>267</y>
+        <x>816</x>
+        <y>437</y>
         <w>33</w>
         <h>16</h>
       </labelAssociation>
       <roleAssociation>
-        <x>245</x>
-        <y>265</y>
+        <x>755</x>
+        <y>435</y>
         <w>0</w>
         <h>16</h>
       </roleAssociation>
       <roleAssociation>
-        <x>415</x>
-        <y>265</y>
+        <x>915</x>
+        <y>435</y>
         <w>0</w>
         <h>16</h>
       </roleAssociation>
       <multipliciteAssociation>
-        <x>245</x>
-        <y>239</y>
+        <x>755</x>
+        <y>409</y>
         <w>23</w>
         <h>16</h>
       </multipliciteAssociation>
       <multipliciteAssociation>
-        <x>407</x>
-        <y>239</y>
+        <x>907</x>
+        <y>409</y>
         <w>8</w>
         <h>16</h>
       </multipliciteAssociation>
     </relationView>
-    <relationView color="-12566464" relationId="10023">
+    <relationView color="-12566464" relationId="13533">
       <line>
         <point>
-          <x>621</x>
-          <y>431</y>
+          <x>501</x>
+          <y>711</y>
         </point>
         <point>
-          <x>621</x>
-          <y>356</y>
+          <x>501</x>
+          <y>651</y>
         </point>
       </line>
     </relationView>
-    <componentView color="-2079" componentID="8209" displayAttributes="true" displayDefault="true" displayMethods="true">
+    <relationView color="-12566464" relationId="10023">
+      <line>
+        <point>
+          <x>1121</x>
+          <y>601</y>
+        </point>
+        <point>
+          <x>1121</x>
+          <y>526</y>
+        </point>
+      </line>
+    </relationView>
+    <relationView color="-12566464" relationId="10373">
+      <line>
+        <point>
+          <x>1581</x>
+          <y>761</y>
+        </point>
+        <point>
+          <x>1581</x>
+          <y>711</y>
+        </point>
+      </line>
+    </relationView>
+    <relationView color="-12566464" relationId="16012">
+      <line>
+        <point>
+          <x>511</x>
+          <y>401</y>
+        </point>
+        <point>
+          <x>511</x>
+          <y>261</y>
+        </point>
+        <point>
+          <x>1121</x>
+          <y>261</y>
+        </point>
+        <point>
+          <x>1121</x>
+          <y>170</y>
+        </point>
+      </line>
+    </relationView>
+    <relationView color="-12566464" relationId="16013">
+      <line>
+        <point>
+          <x>1581</x>
+          <y>401</y>
+        </point>
+        <point>
+          <x>1581</x>
+          <y>261</y>
+        </point>
+        <point>
+          <x>1121</x>
+          <y>261</y>
+        </point>
+        <point>
+          <x>1121</x>
+          <y>170</y>
+        </point>
+      </line>
+    </relationView>
+    <relationView color="-12566464" relationId="18186">
+      <line>
+        <point>
+          <x>1731</x>
+          <y>771</y>
+        </point>
+        <point>
+          <x>1671</x>
+          <y>711</y>
+        </point>
+      </line>
+    </relationView>
+    <componentView color="-2079" componentID="14005" enumValuesVisible="DEFAULT">
       <geometry>
-        <x>990</x>
-        <y>230</y>
-        <w>170</w>
-        <h>70</h>
+        <x>340</x>
+        <y>900</y>
+        <w>150</w>
+        <h>134</h>
       </geometry>
     </componentView>
-    <componentView color="-2079" componentID="8160" displayAttributes="true" displayDefault="true" displayMethods="true">
+    <componentView color="-2079" componentID="13995" enumValuesVisible="DEFAULT">
       <geometry>
-        <x>70</x>
-        <y>230</y>
-        <w>170</w>
-        <h>70</h>
+        <x>620</x>
+        <y>920</y>
+        <w>150</w>
+        <h>104</h>
+      </geometry>
+    </componentView>
+    <componentView color="-2079" componentID="13534" displayAttributes="true" displayDefault="true" displayMethods="true">
+      <geometry>
+        <x>900</x>
+        <y>800</y>
+        <w>420</w>
+        <h>175</h>
+      </geometry>
+    </componentView>
+    <componentView color="-2079" componentID="13520" enumValuesVisible="DEFAULT">
+      <geometry>
+        <x>420</x>
+        <y>710</y>
+        <w>150</w>
+        <h>119</h>
       </geometry>
     </componentView>
     <componentView color="-2079" componentID="7939" displayAttributes="true" displayDefault="true" displayMethods="true">
       <geometry>
-        <x>420</x>
-        <y>150</y>
+        <x>1490</x>
+        <y>400</y>
+        <w>220</w>
+        <h>310</h>
+      </geometry>
+    </componentView>
+    <componentView color="-2079" componentID="8160" displayAttributes="true" displayDefault="true" displayMethods="true">
+      <geometry>
+        <x>290</x>
+        <y>400</y>
+        <w>460</w>
+        <h>250</h>
+      </geometry>
+    </componentView>
+    <componentView color="-2079" componentID="7939" displayAttributes="true" displayDefault="true" displayMethods="true">
+      <geometry>
+        <x>920</x>
+        <y>320</y>
         <w>410</w>
         <h>205</h>
       </geometry>
     </componentView>
     <componentView color="-2079" componentID="10021" enumValuesVisible="DEFAULT">
       <geometry>
-        <x>550</x>
-        <y>430</y>
+        <x>1050</x>
+        <y>600</y>
+        <w>150</w>
+        <h>104</h>
+      </geometry>
+    </componentView>
+    <componentView color="-2079" componentID="10302" displayAttributes="true" displayDefault="true" displayMethods="true">
+      <geometry>
+        <x>1470</x>
+        <y>760</y>
+        <w>220</w>
+        <h>115</h>
+      </geometry>
+    </componentView>
+    <componentView color="-2079" componentID="16011" displayAttributes="true" displayDefault="true" displayMethods="true">
+      <geometry>
+        <x>1050</x>
+        <y>100</y>
+        <w>150</w>
+        <h>69</h>
+      </geometry>
+    </componentView>
+    <componentView color="-2079" componentID="18176" enumValuesVisible="DEFAULT">
+      <geometry>
+        <x>1730</x>
+        <y>760</y>
         <w>150</w>
         <h>104</h>
       </geometry>
