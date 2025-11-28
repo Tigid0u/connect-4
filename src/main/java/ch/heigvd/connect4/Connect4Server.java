@@ -20,11 +20,11 @@ public class Connect4Server implements Runnable{
     @CommandLine.Option(names = {"-p", "--port"}, description = "Server's port. Default is ${DEFAULT-VALUE}", defaultValue = "4444")
     private static int PORT;
     private static final int NB_THREADS = 2;
-    private static final int ROWS = 6;
-    private static final int COLUMNS = 7;
+    private static final int ROWS = 4;
+    private static final int COLUMNS = 4;
 
     private static boolean randomAlreadyDone = false;
-    private static boolean gameCreated = false;
+    private static boolean newGame = true;
     private static boolean endOfGame = false;
     private static boolean opponentLeft = false;
 
@@ -65,6 +65,17 @@ public class Connect4Server implements Runnable{
         }
     }
 
+    static private void resetServerAttributes() {
+
+            if (endOfGame) {
+                randomAlreadyDone = false;
+                nbOfReady.set(0);
+                turnResult = TurnResult.NOTHING;
+                userTurn = null;
+                newGame = true;
+            }
+    }
+
     static class ClientHandler implements Runnable {
         private final Socket socket;
         private String clientUserName;
@@ -95,10 +106,10 @@ public class Connect4Server implements Runnable{
 
                 // Run REPL until client disconnects
                 while (!socket.isClosed()) {
-                    // When the client is in game, and it's not his turn, he will wait until it's his turn to play
-                    // This is so the server can send the information to the client where his opponent played
-                    if ((state == ClientState.IN_GAME) && (!userTurn.equals(clientUserName))) {
-                        synchronized (mutex) {
+                    synchronized (mutex) {
+                        // When the client is in game, and it's not his turn, he will wait until it's his turn to play
+                        // This is so the server can send the information to the client where his opponent played
+                        if ((state == ClientState.IN_GAME) && (!userTurn.equals(clientUserName))) {
                             while (!userTurn.equals(clientUserName) && (!endOfGame)) {
                                 try {
                                     mutex.wait();
@@ -109,13 +120,28 @@ public class Connect4Server implements Runnable{
                             }
                             if (endOfGame) {
                                 if (turnResult ==  TurnResult.WIN) {
+                                    bw.write(ServerCommands.YOUR_TURN + " " + opponentAction + END_OF_LINE);
+                                    bw.flush();
                                     bw.write(ServerCommands.END_OF_GAME + " LOOSE" + END_OF_LINE);
                                 } else {
+                                    bw.write(ServerCommands.YOUR_TURN + " " + opponentAction + END_OF_LINE);
+                                    bw.flush();
                                     bw.write(ServerCommands.END_OF_GAME + " DRAW" + END_OF_LINE);
                                 }
+                                // Removes the client username from the server's data
+                                if (clientUserName != null) {
+                                    userNames.remove(clientUserName);
+                                }
+                                resetServerAttributes();
                                 state = ClientState.JOIN;
                             } else {
                                 if (opponentLeft) {
+                                    state = ClientState.JOIN;
+                                    resetServerAttributes();
+                                    // Removes the client username from the server's data
+                                    if (clientUserName != null) {
+                                        userNames.remove(clientUserName);
+                                    }
                                     bw.write(ServerCommands.END_OF_GAME + " WIN" + END_OF_LINE);
                                 } else {
                                     bw.write(ServerCommands.YOUR_TURN + " " + opponentAction + END_OF_LINE);
@@ -162,10 +188,12 @@ public class Connect4Server implements Runnable{
                             String[] arguments = requestParsed[1].split(" ", 2);
                             clientUserName = arguments[0];
 
-                            // Check if the username is already being used
-                            if (!userNames.add(clientUserName)) {
-                                clientUserName = null;
-                                yield ServerCommands.ERROR + " username_used";
+                            synchronized (mutex) {
+                                // Check if the username is already being used
+                                if (!userNames.add(clientUserName)) {
+                                    clientUserName = null;
+                                    yield ServerCommands.ERROR + " username_used";
+                                }
                             }
 
                             // Update the state the client has to be for the next iteration
@@ -214,15 +242,15 @@ public class Connect4Server implements Runnable{
                                     ++i;
                                 }
 
-                                if (!gameCreated) {
-                                    gameCreated = true;
+                                if (newGame) {
+                                    newGame = false;
                                     game = new Connect4(COLUMNS, ROWS);
                                 }
+                                // Reset Game state
+                                endOfGame = false;
                             }
                             // Update the state the client has to be for the next iteration of the while() loop
                             state = ClientState.IN_GAME;
-                            // Reset Game state
-                            endOfGame = false;
 
                             yield ServerCommands.GAME_STARTS + " " + opponentUserName +
                                     (userTurn.equals(clientUserName) ? " 1" : " 0");
@@ -233,9 +261,11 @@ public class Connect4Server implements Runnable{
                                 yield ServerCommands.ERROR + " invalid_order";
                             }
 
-                            // Check if it's the client's turn to play
-                            if (!userTurn.equals(clientUserName)) {
-                                yield ServerCommands.ERROR + " not_your_turn";
+                            synchronized (mutex) {
+                                // Check if it's the client's turn to play
+                                if (!userTurn.equals(clientUserName)) {
+                                    yield ServerCommands.ERROR + " not_your_turn";
+                                }
                             }
 
                             String[] arguments = requestParsed[1].split(" ", 2);
@@ -255,22 +285,13 @@ public class Connect4Server implements Runnable{
                                 }
                                 opponentAction = columnPlayed;
 
-                                mutex.notifyAll();
-                            }
-
-                            // Result of the turn
-                            if (turnResult == TurnResult.WIN) {
-                                state = ClientState.JOIN;
-                                endOfGame = true;
-                                yield ServerCommands.END_OF_GAME + " WIN";
-                            } else if (turnResult == TurnResult.DRAW) {
-                                state = ClientState.JOIN;
-                                endOfGame = true;
-                                yield ServerCommands.END_OF_GAME + " DRAW";
-                            } else {
+                                if ((turnResult != TurnResult.WIN) && (turnResult != TurnResult.DRAW)) {
+                                    mutex.notifyAll();
+                                }
+                                // Give the opponent the rights to play
                                 userTurn = opponentUserName;
-                                yield String.valueOf(ServerCommands.OK);
                             }
+                            yield String.valueOf(ServerCommands.OK);
 
                         }
                         case null, default -> {
@@ -281,36 +302,53 @@ public class Connect4Server implements Runnable{
                     // Send the result of the request
                     bw.write(response + END_OF_LINE);
                     bw.flush();
+
+                    // Check if this client win
+                    synchronized (mutex) {
+                        // Check if this client win
+                        if (turnResult == TurnResult.WIN) {
+                            // Removes the client username from the server's data
+                            if (clientUserName != null) {
+                                userNames.remove(clientUserName);
+                            }
+                            state = ClientState.JOIN;
+                            endOfGame = true;
+                            mutex.notifyAll();
+                            bw.write(ServerCommands.END_OF_GAME + " WIN" + END_OF_LINE);
+                            bw.flush();
+                        } else if (turnResult == TurnResult.DRAW) {
+                            // Removes the client username from the server's data
+                            if (clientUserName != null) {
+                                userNames.remove(clientUserName);
+                            }
+                            state = ClientState.JOIN;
+                            endOfGame = true;
+                            mutex.notifyAll();
+                            bw.write(ServerCommands.END_OF_GAME + " DRAW" + END_OF_LINE);
+                            bw.flush();
+                        }
+                    }
+
                 }
                 synchronized (mutex) {
                     if (!endOfGame && (state == ClientState.IN_GAME)) {
                         opponentLeft = true;
                         mutex.notifyAll();
                     }
-                }
 
-                // Removes client
-                nbClient.decrementAndGet();
-                System.out.println("Nb of client: " + nbClient);
-                // Removes the client username from the server's data
-                if (clientUserName != null) {
-                    userNames.remove(clientUserName);
+                    // Removes client
+                    nbClient.decrementAndGet();
+                    System.out.println("Nb of client: " + nbClient);
+                    // Removes the client username from the server's data
+                    if (clientUserName != null) {
+                        userNames.remove(clientUserName);
+                    }
                 }
 
                 System.out.println("[SERVER] client " + clientUserName + " disconnected\n" +
                         "[SERVER] closing connection");
             } catch (IOException e) {
                 System.err.println("[ERROR] exception: " + e);
-            }
-        }
-    }
-
-    void resetServerAttributes() {
-        synchronized (mutex) {
-            if (endOfGame) {
-                randomAlreadyDone = false;
-                nbOfReady.set(0);
-                turnResult = TurnResult.NOTHING;
             }
         }
     }

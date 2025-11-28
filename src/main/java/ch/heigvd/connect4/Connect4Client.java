@@ -14,8 +14,8 @@ public class Connect4Client implements Runnable {
   public static String END_OF_LINE = "\n";
   private String username, opponentUsername;
   private boolean isMyTurn;
-  private static final int WIDTH = 7;
-  private static final int HEIGHT = 6;
+  private static final int WIDTH = 4;
+  private static final int HEIGHT = 4;
 
   private enum ReturnValue {
     OK,
@@ -134,6 +134,9 @@ public class Connect4Client implements Runnable {
             isMyTurn = true;
           }
         }
+          CliClientUtils.clearScreen();
+          // Print board a last time to see the final result
+          CliClientUtils.printBoard(game.getGrid());
         try {
           receiveGameResult(in);
         } catch (Exception e) {
