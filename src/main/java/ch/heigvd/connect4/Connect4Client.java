@@ -58,6 +58,7 @@ public class Connect4Client implements Runnable {
 
         // If join request is denied, we start over (ask username and join the server)
         if (retval != ReturnValue.OK) {
+            username = CliClientUtils.getUserInput("Please type in your username");
           continue;
         }
 

@@ -113,11 +113,12 @@ public class Connect4Server implements Runnable{
                                 } else {
                                     bw.write(ServerCommands.END_OF_GAME + " DRAW" + END_OF_LINE);
                                 }
+                                state = ClientState.JOIN;
                             } else {
                                 if (opponentLeft) {
                                     bw.write(ServerCommands.END_OF_GAME + " WIN" + END_OF_LINE);
                                 } else {
-                                    bw.write(ServerCommands.YOUR_TURN + opponentAction + END_OF_LINE);
+                                    bw.write(ServerCommands.YOUR_TURN + " " + opponentAction + END_OF_LINE);
                                 }
                             }
                             bw.flush();
@@ -163,6 +164,7 @@ public class Connect4Server implements Runnable{
 
                             // Check if the username is already being used
                             if (!userNames.add(clientUserName)) {
+                                clientUserName = null;
                                 yield ServerCommands.ERROR + " username_used";
                             }
 
@@ -178,11 +180,11 @@ public class Connect4Server implements Runnable{
                                 yield ServerCommands.ERROR + " invalid_order";
                             }
 
-                            nbOfReady.incrementAndGet();
-                            mutex.notifyAll();
-
                             // Wait for all the players to be ready
                             synchronized (mutex) {
+                                nbOfReady.incrementAndGet();
+                                mutex.notifyAll();
+
                                 while (nbOfReady.get() != NB_THREADS) {
                                     try {
                                         mutex.wait();
@@ -258,9 +260,11 @@ public class Connect4Server implements Runnable{
 
                             // Result of the turn
                             if (turnResult == TurnResult.WIN) {
+                                state = ClientState.JOIN;
                                 endOfGame = true;
                                 yield ServerCommands.END_OF_GAME + " WIN";
                             } else if (turnResult == TurnResult.DRAW) {
+                                state = ClientState.JOIN;
                                 endOfGame = true;
                                 yield ServerCommands.END_OF_GAME + " DRAW";
                             } else {
@@ -279,7 +283,7 @@ public class Connect4Server implements Runnable{
                     bw.flush();
                 }
                 synchronized (mutex) {
-                    if (!endOfGame) {
+                    if (!endOfGame && (state == ClientState.IN_GAME)) {
                         opponentLeft = true;
                         mutex.notifyAll();
                     }
@@ -287,6 +291,7 @@ public class Connect4Server implements Runnable{
 
                 // Removes client
                 nbClient.decrementAndGet();
+                System.out.println("Nb of client: " + nbClient);
                 // Removes the client username from the server's data
                 if (clientUserName != null) {
                     userNames.remove(clientUserName);
