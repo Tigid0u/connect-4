@@ -10,10 +10,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ConcurrentHashMap;
 import ch.heigvd.connect4.utils.*;
 import ch.heigvd.connect4.utils.Connect4.TurnResult;
+import picocli.CommandLine;
+
 import java.util.Random;
 
-public class Connect4Server {
-    private static final int PORT = 4444;
+@CommandLine.Command(name = "server", version = "Connect4Server v1.0", mixinStandardHelpOptions = true)
+
+public class Connect4Server implements Runnable{
+    @CommandLine.Option(names = {"-p", "--port"}, description = "Server's port. Default is ${DEFAULT-VALUE}", defaultValue = "4444")
+    private static int PORT;
     private static final int NB_THREADS = 2;
     private static final int ROWS = 6;
     private static final int COLUMNS = 7;
@@ -45,7 +50,7 @@ public class Connect4Server {
         IN_GAME
     }
 
-    public static void main(String[] args) {
+    public void run() {
         try(ServerSocket serverSocket = new ServerSocket(PORT);
             ExecutorService executor = Executors.newFixedThreadPool(NB_THREADS)
         ) {
