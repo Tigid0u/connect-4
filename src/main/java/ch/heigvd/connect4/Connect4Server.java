@@ -1,4 +1,4 @@
-package connect4;
+package ch.heigvd.connect4;
 
 import java.io.*;
 import java.net.*;
@@ -8,8 +8,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ConcurrentHashMap;
-import connect4.utils.*;
-import connect4.utils.Connect4.TurnResult;
+import ch.heigvd.connect4.utils.*;
+import ch.heigvd.connect4.utils.Connect4.TurnResult;
 import java.util.Random;
 
 public class Connect4Server {

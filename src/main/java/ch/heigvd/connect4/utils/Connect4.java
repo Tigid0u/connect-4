@@ -1,4 +1,4 @@
-package connect4.utils;
+package ch.heigvd.connect4.utils;
 
 public class Connect4 {
     /**
