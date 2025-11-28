@@ -1,0 +1,16 @@
+@startuml
+participant Client1
+participant Client2
+participant Client3
+participant Server
+
+autonumber 1
+
+Client1 -> Server : TCP connected
+Client2 -> Server : TCP connected
+Client3 -> Server : Wait because there are not enough threads
+
+note over Client1, Server
+The third client has to wait because the server only has two threads
+end note
+@enduml
