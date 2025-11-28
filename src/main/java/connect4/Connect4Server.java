@@ -22,6 +22,7 @@ public class Connect4Server {
     private static boolean randomAlreadyDone = false;
     private static boolean gameCreated = false;
     private static boolean endOfGame = false;
+    private static boolean opponentLeft = false;
 
     private static final String END_OF_LINE = "\n";
     private static String userTurn;
@@ -90,6 +91,34 @@ public class Connect4Server {
 
                 // Run REPL until client disconnects
                 while (!socket.isClosed()) {
+                    // When the client is in game, and it's not his turn, he will wait until it's his turn to play
+                    // This is so the server can send the information to the client where his opponent played
+                    if ((state == ClientState.IN_GAME) && (!userTurn.equals(clientUserName))) {
+                        synchronized (mutex) {
+                            while (!userTurn.equals(clientUserName) && (!endOfGame)) {
+                                try {
+                                    mutex.wait();
+                                } catch (InterruptedException e) {
+                                    System.err.println("Exception: " + e);
+                                    Thread.currentThread().interrupt();
+                                }
+                            }
+                            if (endOfGame) {
+                                if (turnResult ==  TurnResult.WIN) {
+                                    bw.write(ServerCommands.END_OF_GAME + " LOOSE" + END_OF_LINE);
+                                } else {
+                                    bw.write(ServerCommands.END_OF_GAME + " DRAW" + END_OF_LINE);
+                                }
+                            } else {
+                                if (opponentLeft) {
+                                    bw.write(ServerCommands.END_OF_GAME + " WIN" + END_OF_LINE);
+                                } else {
+                                    bw.write(ServerCommands.YOUR_TURN + opponentAction + END_OF_LINE);
+                                }
+                            }
+                            bw.flush();
+                        }
+                    }
                     // Server receives a request
                     String request = br.readLine();
 
@@ -186,6 +215,8 @@ public class Connect4Server {
                             }
                             // Update the state the client has to be for the next iteration of the while() loop
                             state = ClientState.IN_GAME;
+                            // Reset Game state
+                            endOfGame = false;
 
                             yield ServerCommands.GAME_STARTS + " " + opponentUserName +
                                     (userTurn.equals(clientUserName) ? " 1" : " 0");
@@ -195,7 +226,6 @@ public class Connect4Server {
                             if (state != ClientState.IN_GAME) {
                                 yield ServerCommands.ERROR + " invalid_order";
                             }
-
 
                             // Check if it's the client's turn to play
                             if (!userTurn.equals(clientUserName)) {
@@ -210,13 +240,17 @@ public class Connect4Server {
                             }
                             String columnPlayed = arguments[0];
 
-                            // Playing the game
-                            try {
-                                turnResult = game.play(Integer.parseInt(columnPlayed), id);
-                            } catch (IllegalArgumentException e) {
-                                yield ServerCommands.ERROR + " invalid_input";
+                            synchronized (mutex) {
+                                // Playing the game
+                                try {
+                                    turnResult = game.play(Integer.parseInt(columnPlayed), id);
+                                } catch (IllegalArgumentException e) {
+                                    yield ServerCommands.ERROR + " invalid_input";
+                                }
+                                opponentAction = columnPlayed;
+
+                                mutex.notifyAll();
                             }
-                            opponentAction = columnPlayed;
 
                             // Result of the turn
                             if (turnResult == TurnResult.WIN) {
@@ -229,23 +263,24 @@ public class Connect4Server {
                                 userTurn = opponentUserName;
                                 yield String.valueOf(ServerCommands.OK);
                             }
+
                         }
                         case null, default -> {
                             yield ServerCommands.ERROR + " unknown_message";
                         }
                     };
 
-                    if (endOfGame) {
-                        randomAlreadyDone = false;
-                    }
-
-                    // Making this verification in case we don't need to send anything to the client
-                    if (!response.isEmpty()) {
-                        // Send the result of the request
-                        bw.write(response + END_OF_LINE);
-                        bw.flush();
+                    // Send the result of the request
+                    bw.write(response + END_OF_LINE);
+                    bw.flush();
+                }
+                synchronized (mutex) {
+                    if (!endOfGame) {
+                        opponentLeft = true;
+                        mutex.notifyAll();
                     }
                 }
+
                 // Removes client
                 nbClient.decrementAndGet();
                 // Removes the client username from the server's data
@@ -257,6 +292,16 @@ public class Connect4Server {
                         "[SERVER] closing connection");
             } catch (IOException e) {
                 System.err.println("[ERROR] exception: " + e);
+            }
+        }
+    }
+
+    void resetServerAttributes() {
+        synchronized (mutex) {
+            if (endOfGame) {
+                randomAlreadyDone = false;
+                nbOfReady.set(0);
+                turnResult = TurnResult.NOTHING;
             }
         }
     }
