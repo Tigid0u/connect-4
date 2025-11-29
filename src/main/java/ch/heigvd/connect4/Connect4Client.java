@@ -13,7 +13,8 @@ import picocli.CommandLine.Option;
 public class Connect4Client implements Runnable {
   public static String END_OF_LINE = "\n";
   private String username, opponentUsername;
-  private boolean isMyTurn;
+  private static final String OPPONENT_LEFT_MESSAGE = "Opponent has left the game.";
+  private boolean isMyTurn, opponentLeft = false;
   private static final int WIDTH = 4;
   private static final int HEIGHT = 4;
 
@@ -47,6 +48,8 @@ public class Connect4Client implements Runnable {
       CliClientUtils.displayBanner();
 
       while (!socket.isClosed()) {
+          // Reset opponentLeft flag at the beginning of each game
+          opponentLeft = false;
         // Join the server
         try {
           retval = joinRequest(in, out);
@@ -88,7 +91,7 @@ public class Connect4Client implements Runnable {
         Connect4 game = new Connect4(WIDTH, HEIGHT);
         Connect4.TurnResult turnResult = Connect4.TurnResult.NOTHING;
 
-        while (turnResult != Connect4.TurnResult.WIN && turnResult != Connect4.TurnResult.DRAW) {
+        while (turnResult != Connect4.TurnResult.WIN && turnResult != Connect4.TurnResult.DRAW && !opponentLeft) {
           CliClientUtils.clearScreen();
 
           // Print board
@@ -112,6 +115,13 @@ public class Connect4Client implements Runnable {
             try {
               sendPlayRequest(out, in, column);
             } catch (Exception e) {
+                // Check if opponent has left, if so, we break the loop and win by default receiving a message
+                // from the server
+                if (e.getMessage().equals(OPPONENT_LEFT_MESSAGE)) {
+                    System.out.println("Your opponent has left the game. You win by default!");
+                    opponentLeft = true;
+                    break;
+                }
               System.out.println("[Client] PLAY request failed: " + e.getMessage());
               // Should not happen in normal conditions, so if it does, we exit
               return;
@@ -124,6 +134,13 @@ public class Connect4Client implements Runnable {
             try {
               opponentColumn = receiveOpponentPlay(in);
             } catch (Exception e) {
+                // Check if opponent has left, if so, we break the loop and win by default receiving a message
+                // from the server
+                if (e.getMessage().equals(OPPONENT_LEFT_MESSAGE)) {
+                    System.out.println("Your opponent has left the game. You win by default!");
+                    opponentLeft = true;
+                    break;
+                }
               System.out.println("[Client] Receiving opponent's play failed: " + e.getMessage());
               // Should not happen in normal conditions, so if it does, we exit
               return;
@@ -280,7 +297,10 @@ public class Connect4Client implements Runnable {
     // Convert response to ServerCommand
     ServerCommands serverCommand = ServerCommands.valueOf(responseParts[0]);
 
-    if (serverCommand == ServerCommands.OK) {
+    // Handle server response
+    if (serverCommand == ServerCommands.OPPONENT_LEFT) {
+        throw new IOException(OPPONENT_LEFT_MESSAGE);
+    } else if (serverCommand == ServerCommands.OK) {
       return;
     } else if (serverCommand == ServerCommands.ERROR) {
       if (responseParts.length < 2) {
@@ -315,7 +335,9 @@ public class Connect4Client implements Runnable {
     // Convert response to ServerCommand
     ServerCommands serverCommand = ServerCommands.valueOf(responseParts[0]);
 
-    if (serverCommand != ServerCommands.YOUR_TURN) {
+    if (serverCommand == ServerCommands.OPPONENT_LEFT) {
+        throw new IOException(OPPONENT_LEFT_MESSAGE);
+    } else if (serverCommand != ServerCommands.YOUR_TURN) {
       throw new IOException("Expected YOUR_TURN notification, but received: " + response);
     } else if (responseParts.length < 2) {
       throw new IOException("YOUR_TURN notification missing parameters: " + response);
@@ -360,7 +382,13 @@ public class Connect4Client implements Runnable {
     }
 
     switch (responseParts[1]) {
-      case "WIN" -> System.out.println("You won!");
+      case "WIN" -> {
+          if (opponentLeft) {
+                System.out.println("Your opponent has left the game. You win by default!");
+                return;
+          }
+          System.out.println("You won!");
+      }
       case "LOOSE" -> System.out.println("You lost!");
       case "DRAW" -> System.out.println("It's a draw!");
       default -> throw new IllegalArgumentException("Invalid END_OF_GAME parameter: " + responseParts[1]);

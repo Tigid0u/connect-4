@@ -80,7 +80,7 @@ public class Connect4Server implements Runnable{
      * Resets the server game state if the previous game has ended
      */
     private static void resetServerGameStateIfNeeded() {
-        if (!endOfGame) {
+        if (!endOfGame && !opponentLeft) {
             return;
         }
         randomAlreadyDone = false;
@@ -133,6 +133,8 @@ public class Connect4Server implements Runnable{
                     if (request == null) {
                         socket.close();
                         continue;
+                    } else if (opponentLeft) {
+                        handleOpponentLeft(bw);
                     }
 
                     // Parse the request for the first command
@@ -158,7 +160,7 @@ public class Connect4Server implements Runnable{
          * Logs a new client connection
          */
         private void logNewConnection() {
-            System.out.println("[SERVER] new client connected from " +
+            System.out.println("[Server] new client connected from " +
                     socket.getInetAddress().getHostAddress() +
                     ":" +
                     socket.getPort()
@@ -179,7 +181,7 @@ public class Connect4Server implements Runnable{
                 }
 
                 // Wait until it's the client's turn or the game ends
-                while (!userTurn.equals(clientUserName) && !endOfGame) {
+                while (!userTurn.equals(clientUserName) && !endOfGame && !opponentLeft) {
                     try {
                         mutex.wait();
                     } catch (InterruptedException e) {
@@ -243,6 +245,9 @@ public class Connect4Server implements Runnable{
             state = ClientState.JOIN;
             resetServerGameStateIfNeeded();
             cleanupUsername();
+            // Notify the client that the opponent has left and they win
+            bw.write(ServerCommands.OPPONENT_LEFT + END_OF_LINE);
+            bw.flush();
             bw.write(ServerCommands.END_OF_GAME + " WIN" + END_OF_LINE);
             bw.flush();
         }
@@ -483,11 +488,10 @@ public class Connect4Server implements Runnable{
 
                 nbClient.decrementAndGet();
 
+                System.out.println("[Server] client " + clientUserName + " disconnected\n" +
+                        "[Server] closing connection");
                 cleanupUsername();
             }
-
-            System.out.println("[SERVER] client " + clientUserName + " disconnected\n" +
-                    "[SERVER] closing connection");
         }
 
         /**
