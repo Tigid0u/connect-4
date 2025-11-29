@@ -14,9 +14,9 @@ public class Connect4Client implements Runnable {
   public static String END_OF_LINE = "\n";
   private String username, opponentUsername;
   private static final String OPPONENT_LEFT_MESSAGE = "Opponent has left the game.";
-  private boolean isMyTurn, opponentLeft = false;
-  private static final int WIDTH = 4;
-  private static final int HEIGHT = 4;
+  private boolean isMyTurn, opponentLeft = false, startGame = false;
+  private static final int WIDTH = 7;
+  private static final int HEIGHT = 6;
 
   private enum ReturnValue {
     OK,
@@ -50,6 +50,7 @@ public class Connect4Client implements Runnable {
       while (!socket.isClosed()) {
           // Reset opponentLeft flag at the beginning of each game
           opponentLeft = false;
+          startGame = false;
         // Join the server
         try {
           retval = joinRequest(in, out);
@@ -76,7 +77,9 @@ public class Connect4Client implements Runnable {
 
         // Wait for the GAME_STARTS notification from the server
         try {
-          waitForGameStartNotification(in);
+            while (!startGame) {
+                waitForGameStartNotification(in);
+            }
         } catch (IOException e) {
           System.out.println("[Client] Waiting for GAME_STARTS notification failed: " + e.getMessage());
           continue;
@@ -87,6 +90,7 @@ public class Connect4Client implements Runnable {
 
         // If we reach this point, we are successfully connected and ready to play
         System.out.println("Game is starting against opponent: " + opponentUsername);
+        Thread.sleep(2000);
 
         Connect4 game = new Connect4(WIDTH, HEIGHT);
         Connect4.TurnResult turnResult = Connect4.TurnResult.NOTHING;
@@ -175,7 +179,7 @@ public class Connect4Client implements Runnable {
   private ReturnValue joinRequest(BufferedReader in, BufferedWriter out) throws IOException, IllegalArgumentException {
     String request = null, response = null;
     String[] responseParts = null;
-      username = CliClientUtils.getUserInput("Please type in your username");
+      username = CliClientUtils.getUserInput("Please type in your username for the new game");
 
     // Request to join server using JOIN command.
     request = ClientCommands.JOIN + " " + username + END_OF_LINE;
@@ -256,11 +260,17 @@ public class Connect4Client implements Runnable {
     // Convert response to ServerCommand
     ServerCommands gameStartCommand = ServerCommands.valueOf(responseParts[0]);
 
-    if (gameStartCommand != ServerCommands.GAME_STARTS) {
+    if (gameStartCommand == ServerCommands.PING) {
+        // Ignore PING messages
+        return;
+    } else if (gameStartCommand != ServerCommands.GAME_STARTS) {
       throw new IllegalArgumentException("Expected GAME_STARTS notification, but received: " + response);
     } else if (responseParts.length < 3) {
       throw new IllegalArgumentException("GAME_STARTS notification missing parameters: " + response);
     }
+
+    // If we reach this point, we have a valid GAME_STARTS notification
+      startGame = true;
 
     // Opponnent username is in the second part of the response
     this.opponentUsername = responseParts[1];
@@ -323,17 +333,30 @@ public class Connect4Client implements Runnable {
    *                     invalid
    **/
   private int receiveOpponentPlay(BufferedReader in) throws IOException, IllegalArgumentException {
-    // Wait for opponent's play (YOUR_TURN notification)
-    String response = in.readLine();
-    int opponentColumn;
+    boolean receivePing = false;
+      String response;
+      String[] responseParts;
+      ServerCommands serverCommand;
+      int opponentColumn;
+    do {
+        // Wait for opponent's play (YOUR_TURN notification)
+        response = in.readLine();
 
-    if (response == null) {
-      throw new IOException("Null response from the server");
-    }
+        if (response == null) {
+            throw new IOException("Null response from the server");
+        }
 
-    String[] responseParts = response.split(" ", 2);
-    // Convert response to ServerCommand
-    ServerCommands serverCommand = ServerCommands.valueOf(responseParts[0]);
+        responseParts = response.split(" ", 2);
+        // Convert response to ServerCommand
+        serverCommand = ServerCommands.valueOf(responseParts[0]);
+
+        // Handle PING messages from the server
+        if (serverCommand == ServerCommands.PING) {
+            receivePing = true;
+        } else {
+            receivePing = false;
+        }
+    } while(receivePing);
 
     if (serverCommand == ServerCommands.OPPONENT_LEFT) {
         throw new IOException(OPPONENT_LEFT_MESSAGE);

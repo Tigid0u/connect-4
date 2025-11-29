@@ -49,7 +49,7 @@ Server -> Client2: GAME_STARTS Alice 0
 
 |||
 
-loop until one of the players win or a draw occurs
+loop until one of the players win, a draw occurs or a player forfeits
     == Play a turn ==
 
     Client1 -> Server: PLAY 3
@@ -69,6 +69,11 @@ loop until one of the players win or a draw occurs
     else wrong format
 
         Server -> Client1: ERROR invalid_format
+
+    else opponent forfeited
+
+        Server -> Client1: OPPONENT_LEFT
+        break
 
     end
 

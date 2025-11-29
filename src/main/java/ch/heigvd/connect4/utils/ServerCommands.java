@@ -11,5 +11,6 @@ public enum ServerCommands {
   GAME_STARTS,
   YOUR_TURN,
   END_OF_GAME,
-    OPPONENT_LEFT
+    OPPONENT_LEFT,
+    PING
 }
