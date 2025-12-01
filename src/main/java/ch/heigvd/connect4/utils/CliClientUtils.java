@@ -2,6 +2,8 @@ package ch.heigvd.connect4.utils;
 
 import java.util.Scanner;
 
+import ch.heigvd.connect4.Connect4Client;
+
 public class CliClientUtils {
   private static final Scanner sin = new Scanner(System.in);
 
@@ -94,8 +96,8 @@ public class CliClientUtils {
       throw new IllegalArgumentException("Grid must not be empty");
     }
 
-    int rows = grid.length;
-    int cols = grid[0].length;
+    int rows = Connect4Client.HEIGHT;
+    int cols = Connect4Client.WIDTH;
 
     // Top border
     printHorizontalBorder(cols, '┌', '┬', '┐');
@@ -104,7 +106,7 @@ public class CliClientUtils {
       // Row with pieces
       System.out.print('│');
       for (int c = 0; c < cols; c++) {
-        char symbol = cellSymbol(grid[r][c]);
+        char symbol = cellSymbol(grid[c][rows - 1 - r]);
         System.out.print(" " + symbol + " ");
         if (c < cols - 1) {
           System.out.print('│');
