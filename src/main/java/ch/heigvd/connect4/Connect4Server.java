@@ -122,6 +122,7 @@ public class Connect4Server implements Runnable{
                             continue;
                         } else if (opponentLeft) {
                             handleOpponentLeft(bw);
+                            opponentLeft = false;
                             continue;
                         }
                     }
@@ -202,6 +203,7 @@ public class Connect4Server implements Runnable{
                 // Opponent left while waiting
                 if (opponentLeft) {
                     handleOpponentLeft(bw);
+                    opponentLeft = false;
                     return;
                 }
 
@@ -508,9 +510,7 @@ public class Connect4Server implements Runnable{
                 randomAlreadyDone = false;
                 nbOfReady.set(0);
                 turnResult = TurnResult.NOTHING;
-                userTurn = null;
                 newGame = true;
-                opponentLeft = false;
                 state = ClientState.JOIN;
             }
         }
@@ -530,6 +530,8 @@ public class Connect4Server implements Runnable{
                 if (nbClient.get() == 0) {
                     // Reset server state if all clients disconnected
                     resetServerGameStateIfNeeded();
+                    opponentLeft = false;
+                    userTurn = null;
                 }
 
                 disconnectedWhileWaitingForPlayers = false;
