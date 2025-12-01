@@ -176,7 +176,7 @@ public class Connect4Server implements Runnable{
                 }
 
                 // Wait until it's the client's turn or the game ends
-                while (!userTurn.equals(clientUserName) && !endOfGame && !opponentLeft) {
+                while (!userTurn.equals(clientUserName) && !endOfGame && !opponentLeft && !disconnectedWhileWaitingForPlayers) {
                     try {
                         mutex.wait(5000);
                         // Send PING to keep the connection alive
