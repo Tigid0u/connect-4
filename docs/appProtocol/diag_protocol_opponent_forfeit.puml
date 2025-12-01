@@ -1,0 +1,28 @@
+@startuml
+participant Client1
+participant Server
+participant Client2
+autonumber 1
+== Join server ==
+Client1 -> Server: JOIN Alice
+Server -> Client1: OK
+|||
+== New opponent joins and readies themselves ==
+Client2 -> Server: JOIN Bob
+Server -> Client2: OK
+Client1 -> Server: READY
+Client2 -> Server: READY
+|||
+== Game starts if all players are ready ==
+Server -> Client1: GAME_STARTS Bob 1
+Server -> Client2: GAME_STARTS Alice 0
+|||
+loop until one of the players win, a draw occurs or a player forfeits
+    == Play a turn ==
+    Client1 -> Server: PLAY 3
+    Server -> Client1: OK
+    Client2 -> Client2: Disconnect from game (forfeit)
+    Server -> Client1: OPPONENT_LEFT
+end
+Server -> Client1: END_OF_GAME WIN
+@enduml

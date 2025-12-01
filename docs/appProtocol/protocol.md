@@ -124,6 +124,18 @@ YOUR_TURN <column>
 
 None
 
+### Opponent forfeited
+
+If a player leaves during a game, the server sends the other player an `OPPONENT_LEFT` announcement signaling that the opponent has left the game and the server will send an `END_OF_GAME WIN` message right after.
+
+```
+OPPONENT_LEFT
+```
+
+**Response**
+
+None
+
 ### End of a game
 
 Once one player won or all the columns are full, the server sends a `END_OF_GAME` request to announce that the game is finished and who's the winner in case there's one or if it's a draw in announces the draw. Each client receives a different announcement (unless it's a draw) as one wins and the other looses.
@@ -155,7 +167,19 @@ If the client sends an unknown message, the server will answer with a generic re
 
 - `ERROR unknown_message`: tells the client that the request he made is unknown to him
 
-## Example
+### Ping message
+
+To check if the client is still connected, the server can send a `PING` message to the client.
+
+```
+PING
+```
+
+**Response**
+
+None
+
+## Example - successful game (single PLAY turn)
 
 ![](diag_protocol.svg)
 
@@ -170,3 +194,11 @@ If the client sends an unknown message, the server will answer with a generic re
 ### Example - client sends a command he's not supposed to
 
 ![](diag_protocol_order_error.svg)
+
+### Example - opponent leaves during the game
+
+![](diag_protocol_opponent_forfeit.svg)
+
+### Example - checking if the client is still connected
+
+![](diag_protocol_ping.svg)
