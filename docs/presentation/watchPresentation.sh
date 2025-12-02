@@ -1,0 +1,1 @@
+docker run --rm --entrypoint="marp-cli.js" -v $PWD:/home/marp/app/ -p 37717:37717 marpteam/marp-cli:v4.1.1 -w ./docs/presentation/PRESENTATION.md
