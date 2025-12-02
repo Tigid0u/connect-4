@@ -41,9 +41,22 @@ docker run -it --rm --network connect4-net ghcr.io/tigid0u/connect4-docker:lates
 ![connect-lib](./img/connect-lib.png)
 
 ---
-# **Connect 4 Server**
+# **Connect 4 Server - Commands**
 
-- **TODO**: list server commands
+Commands supported by the server to send to the client:
+- **GAME_STARTS <op_username\> <your_turn\>**: start the game indicating the name of the opponent
+- **YOUR_TURN <column\>**: delegate turn
+- **END_OF_GAME <code\>**: game ended with result
+- **OPPONENT_LEFT**: opponent forfeit
+- **PING**: keep-alive
+
+---
+# **Connect 4 Server - Commands**
+
+Reponses send to the client when receiving commands:
+- **OK**: client's command was accepted
+- **ERROR <type>**
+
 ---
 
 # **Connect 4 Server**
