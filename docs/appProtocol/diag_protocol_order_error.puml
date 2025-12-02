@@ -1,0 +1,17 @@
+@startuml
+participant Client1
+participant Server
+
+autonumber 1
+
+== Join server ==
+
+Client1 -> Server: JOIN Alice
+Server -> Client1: OK
+
+|||
+
+Client1 -> Server: PLAY 1
+Server -> Client1: ERROR invalid_order
+
+@enduml

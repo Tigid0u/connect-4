@@ -1,0 +1,21 @@
+@startuml
+participant Client
+participant Server
+autonumber 1
+
+== Join server ==
+Client -> Server: JOIN Alice
+Server -> Client: OK
+|||
+Client -> Server: READY
+|||
+...
+note over Client, Server
+The server PING only when the connection
+is idle for a certain period of time.
+And since there is no activity after the READY command,
+the server will send a PING to the client.
+end note
+== Ping the server ==
+Server -> Client: PING
+@enduml

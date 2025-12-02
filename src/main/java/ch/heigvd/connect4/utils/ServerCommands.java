@@ -1,4 +1,4 @@
-package connect4;
+package ch.heigvd.connect4.utils;
 
 /**
  * Defines the commands the server can send
@@ -10,5 +10,7 @@ public enum ServerCommands {
   // Other commands
   GAME_STARTS,
   YOUR_TURN,
-  END_OF_GAME
+  END_OF_GAME,
+    OPPONENT_LEFT,
+    PING
 }
