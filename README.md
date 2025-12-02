@@ -192,7 +192,7 @@ The output should be similar to the first client and the output on the server sh
 
 The game will then start once the second player enters their username.
 
-The output on on the client that starts first should be similar to this:
+The output on the client that starts first should be similar to this:
 
 ```
 ┌───┬───┬───┬───┬───┬───┬───┐
