@@ -350,3 +350,7 @@ If you wish to help this project evolve, create an issue as follows to be added 
 Tag the maintainers in a comment to maximize the chances for your request to be reviewed in the shortest delays.
 
 You can also report bugs or suggest new features by creating issues and labeling them accordingly. Pull requests are also welcome!
+
+## AI usage
+
+We used AI tools (Github Copilot) for some documentation tasks such as PR descriptions and some code comments as those tasks are sometimes repetitive and time-consuming and do not really add value to the project.
